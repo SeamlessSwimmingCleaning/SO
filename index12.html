@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Supermarket Organizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; background-color: #2c3e50; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        #lobby-container { text-align:center; color:white; }
+        #lobby { 
+            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: auto;
+            gap: 10px; padding: 20px; height: 75vh; background: #95a5a6; overflow-y: auto;
+        }
+        .store-section {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: #bdc3c7; border: 3px solid #7f8c8d; border-radius: 10px; cursor: pointer; min-height: 80px;
+        }
+        .section-icon { font-size: 40px; }
+        .section-label { font-size: 10px; font-weight: bold; color: #2c3e50; text-transform: uppercase; }
+
+        #trophy-btn { 
+            background: #f1c40f; color: #2c3e50; border: none; padding: 15px; 
+            font-family: 'Press Start 2P', cursive; font-size: 10px; width: 90%; 
+            margin: 10px auto; border-radius: 10px; cursor: pointer; border-bottom: 5px solid #d4ac0d;
+        }
+        #trophy-screen { 
+            display: none; height: 100vh; background: #34495e; color: white; 
+            text-align: center; padding: 20px; box-sizing: border-box;
+        }
+        .trophy-case {
+            background: #2c3e50; border: 4px solid #f1c40f; border-radius: 15px;
+            padding: 20px; display: flex; justify-content: space-around; margin-top: 30px;
+        }
+        .trophy-item { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .trophy-count { font-family: 'Press Start 2P', cursive; font-size: 12px; color: #f1c40f; }
+
+        #game-screen { display: none; height: 100vh; background: #ecf0f1; position: relative; }
+        
+        #ui-bar {
+            height: 60px; background: #333; color: white;
+            display: flex; flex-direction: column; padding: 5px 15px; justify-content: center;
+            z-index: 100; position: relative;
+        }
+        .ui-top-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        #xp-container { width: 100%; height: 8px; background: #444; border-radius: 4px; margin-top: 5px; overflow: hidden; }
+        #xp-bar { width: 0%; height: 100%; background: #f1c40f; transition: width 0.3s; }
+        #level-text { font-size: 12px; font-weight: bold; color: #f1c40f; }
+
+        .shelf-area {
+            display: flex; flex-direction: column; gap: 20px; padding: 15px;
+            height: 55vh; overflow-y: auto; overflow-x: auto;
+        }
+        .shelf-row {
+            display: flex; flex-direction: row; background: #8b5a2b; padding: 10px;
+            border-bottom: 8px solid #5d3a1a; gap: 25px; min-height: 65px; align-self: flex-start; border-radius: 4px;
+        }
+        .shelf-bay { display: flex; gap: 4px; background: rgba(0,0,0,0.1); padding: 5px; border-radius: 3px; }
+        .slot { width: 45px; height: 45px; background: rgba(0,0,0,0.2); border-radius: 4px; flex-shrink: 0; position: relative; }
+        
+        .item {
+            position: absolute; width: 44px; height: 44px; background: white;
+            border-radius: 5px; display: flex; align-items: center; justify-content: center;
+            font-size: 26px; cursor: grab; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10;
+        }
+        
+        .item-gold { border: 3px solid #f1c40f; box-shadow: 0 0 10px #f1c40f; animation: pulse-gold 1s infinite alternate; }
+        .item-diamond { border: 3px solid #3498db; box-shadow: 0 0 10px #3498db; animation: pulse-diamond 1s infinite alternate; }
+        .item-ruby { border: 3px solid #e74c3c; box-shadow: 0 0 10px #e74c3c; animation: pulse-ruby 1s infinite alternate; }
+        
+        @keyframes pulse-gold { from { box-shadow: 0 0 2px #f1c40f; } to { box-shadow: 0 0 12px #f1c40f; } }
+        @keyframes pulse-diamond { from { box-shadow: 0 0 2px #3498db; } to { box-shadow: 0 0 12px #3498db; } }
+        @keyframes pulse-ruby { from { box-shadow: 0 0 2px #e74c3c; } to { box-shadow: 0 0 12px #e74c3c; } }
+
+        .stack-badge {
+            position: absolute; top: -8px; right: -8px; background: #e74c3c;
+            color: white; font-size: 12px; min-width: 18px; height: 18px; 
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; font-weight: bold; pointer-events: none; 
+            border: 2px solid white; z-index: 50;
+        }
+
+        #floor { height: 35vh; background: #bdc3c7; border-top: 5px solid #757d7f; position: relative; overflow: hidden; }
+        #road {
+            position: absolute; bottom: 10px; width: 100%; height: 60px;
+            background: #34495e; border-top: 3px solid #2c3e50; border-bottom: 3px solid #2c3e50;
+        }
+        .road-line {
+            position: absolute; top: 50%; width: 100%; height: 4px;
+            border-top: 4px dashed #f1c40f; transform: translateY(-50%); opacity: 0.6;
+        }
+
+        #customer-zone {
+            position: absolute; bottom: 5px; right: 20px; display: flex; align-items: flex-end;
+            pointer-events: none; transition: transform 0.5s ease-out; transform: translateY(150px);
+        }
+        #customer-emoji { font-size: 50px; }
+        #speech-bubble {
+            background: white; border: 3px solid black; padding: 10px; border-radius: 10px;
+            margin-bottom: 30px; margin-right: -10px; position: relative;
+            font-family: 'Press Start 2P', cursive; font-size: 8px; line-height: 1.4; color: black;
+        }
+        #speech-bubble::after {
+            content: ''; position: absolute; bottom: -15px; right: 20px;
+            border-width: 15px 15px 0 0; border-style: solid; border-color: white transparent;
+        }
+
+        .btn-add { background: #27ae60; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; transition: transform 0.2s; }
+        .btn-super { background: #8e44ad; }
+
+        #truck {
+            position: absolute; font-size: 50px; bottom: 15px; left: -120px;
+            transition: left 3.5s linear;
+            pointer-events: none; z-index: 105;
+            transform: scaleX(-1);
+        }
+
+        .sparkle {
+            position: absolute; pointer-events: none; font-size: 20px;
+            animation: fly-out 0.6s ease-out forwards; z-index: 2000;
+        }
+        @keyframes fly-out {
+            0% { transform: translate(0,0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        #settings-modal {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 20px; border-radius: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            z-index: 2000; text-align: center; width: 200px; color: #333;
+        }
+        #overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index: 1999; }
+    </style>
+</head>
+<body>
+
+<div id="lobby-container">
+    <h2 style="margin:10px;">STORE MAP <span onclick="toggleSettings()" style="cursor:pointer; font-size:20px;">⚙️</span></h2>
+    <button id="trophy-btn" onclick="openTrophyRoom()">🏆 TROPHY ROOM</button>
+    <div id="lobby">
+        <div class="store-section" onclick="enterAisle('fruit')"><span class="section-icon">🍎</span><span class="section-label">Fruit</span></div>
+        <div class="store-section" onclick="enterAisle('veg')"><span class="section-icon">🥦</span><span class="section-label">Veg</span></div>
+        <div class="store-section" onclick="enterAisle('dairy')"><span class="section-icon">🧀</span><span class="section-label">Dairy</span></div>
+        <div class="store-section" onclick="enterAisle('bakery')"><span class="section-icon">🍞</span><span class="section-label">Bakery</span></div>
+        <div class="store-section" onclick="enterAisle('meat')"><span class="section-icon">🍗</span><span class="section-label">Meat</span></div>
+        <div class="store-section" onclick="enterAisle('drinks')"><span class="section-icon">🥤</span><span class="section-label">Drinks</span></div>
+        <div class="store-section" onclick="enterAisle('snacks')"><span class="section-icon">🍿</span><span class="section-label">Snacks</span></div>
+        <div class="store-section" onclick="enterAisle('frozen')"><span class="section-icon">🍦</span><span class="section-label">Frozen</span></div>
+        <div class="store-section" onclick="enterAisle('cleaning')"><span class="section-icon">🧼</span><span class="section-label">Clean</span></div>
+        <div class="store-section" onclick="enterAisle('gift')"><span class="section-icon">💖</span><span class="section-label">Gift Shop</span></div>
+    </div>
+</div>
+
+<div id="trophy-screen">
+    <h2 style="font-family: 'Press Start 2P'; font-size: 14px; margin-top: 40px;">COLLECTION</h2>
+    <div class="trophy-case">
+        <div class="trophy-item">
+            <div class="item item-gold" style="position:static; cursor:default;">✨</div>
+            <div class="trophy-count" id="count-gold">0</div>
+            <div style="font-size:8px;">GOLDEN</div>
+        </div>
+        <div class="trophy-item">
+            <div class="item item-diamond" style="position:static; cursor:default;">💎</div>
+            <div class="trophy-count" id="count-diamond">0</div>
+            <div style="font-size:8px;">DIAMOND</div>
+        </div>
+        <div class="trophy-item">
+            <div class="item item-ruby" style="position:static; cursor:default;">🏮</div>
+            <div class="trophy-count" id="count-ruby">0</div>
+            <div style="font-size:8px;">RUBY</div>
+        </div>
+    </div>
+    <br><br>
+    <button onclick="closeTrophyRoom()" style="padding:15px; font-family:'Press Start 2P'; font-size:10px;">BACK TO MAP</button>
+</div>
+
+<div id="game-screen">
+    <div id="ui-bar">
+        <div class="ui-top-row">
+            <button onclick="exitAisle()">← Map</button>
+            <span id="level-text">MANAGER LVL 1</span>
+            <button class="btn-add" id="add-btn" onclick="triggerTruck()">Add +10</button>
+            <button onclick="toggleSettings()">⚙️</button>
+        </div>
+        <div id="xp-container"><div id="xp-bar"></div></div>
+    </div>
+    <div class="shelf-area" id="shelf-area"></div>
+    <div id="floor">
+        <div id="road"><div class="road-line"></div></div>
+        <div id="truck">🚛</div>
+        <div id="customer-zone">
+            <div id="speech-bubble">CAN I HAVE<br>A <span id="target-item">🍎</span>?</div>
+            <div id="customer-emoji">🧔</div>
+        </div>
+    </div>
+    <div id="items-layer"></div>
+</div>
+
+<div id="overlay" onclick="toggleSettings()"></div>
+<div id="settings-modal">
+    <h3>Settings</h3>
+    <button id="music-toggle" onclick="toggleMusic()" style="padding:10px; width:100%;">Mute Music</button>
+    <br><br>
+    <button onclick="toggleSettings()" style="padding:5px;">Close</button>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let musicStarted = false;
+    let isMuted = false;
+    let truckIsMoving = false;
+    let currentRequest = null;
+
+    let managerXP = parseInt(localStorage.getItem('m_xp')) || 0;
+    let managerLvl = parseInt(localStorage.getItem('m_lvl')) || 1;
+    
+    let trophies = JSON.parse(localStorage.getItem('m_trophies')) || { gold: 0, diamond: 0, ruby: 0 };
+
+    const JazzNotes = {
+        'A': 220.00, 'B': 246.94, 'C': 261.63, 'D': 293.66, 'E': 329.63, 'F': 349.23, 'G': 392.00,
+        'hiA': 440.00, 'hiC': 523.25, 'hiE': 659.25, 'hiG': 783.99
+    };
+
+    const chords = [
+        ['A', 'C', 'E', 'G'],    
+        ['D', 'F', 'A', 'hiC'],  
+        ['F', 'A', 'hiC', 'hiE'],
+        ['G', 'B', 'D', 'F']     
+    ];
+
+    function playPianoNote(freq, vol, dur) {
+        if (isMuted) return;
+        const o = audioCtx.createOscillator(); 
+        const g = audioCtx.createGain();
+        o.type = 'sine'; 
+        o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        g.gain.setValueAtTime(0, audioCtx.currentTime);
+        g.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + 0.1);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + dur);
+    }
+
+    function playInteractionSFX(type) {
+        if (isMuted) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        if (type === 'snap') {
+            o.type = 'sine';
+            o.frequency.setValueAtTime(150, audioCtx.currentTime);
+            g.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+        } else if (type === 'lvlup') {
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(523, audioCtx.currentTime);
+            o.frequency.exponentialRampToValueAtTime(1046, audioCtx.currentTime + 0.3);
+            g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        } else if (type === 'truck') {
+            o.type = 'sawtooth';
+            o.frequency.setValueAtTime(80, audioCtx.currentTime);
+            g.gain.setValueAtTime(0.02, audioCtx.currentTime);
+        } else if (type === 'honk') {
+            o.type = 'square';
+            o.frequency.setValueAtTime(400, audioCtx.currentTime);
+            g.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        } else if (type === 'success') {
+            o.type = 'sine';
+            o.frequency.setValueAtTime(600, audioCtx.currentTime);
+            o.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.2);
+            g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        }
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + 1);
+    }
+
+    function playDrumTap(vol = 0.2) {
+        if (isMuted) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(70, audioCtx.currentTime); 
+        o.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.1);
+        g.gain.setValueAtTime(vol, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + 0.1);
+    }
+
+    let chordIdx = 0;
+    function playLoop() {
+        if (isMuted) { setTimeout(playLoop, 1000); return; }
+        const currentChord = chords[chordIdx];
+        currentChord.forEach((noteName, i) => {
+            setTimeout(() => { playPianoNote(JazzNotes[noteName], 0.04, 4); }, i * 120);
+        });
+        const rhythm = [0, 1000, 2000, 2250, 3000]; 
+        rhythm.forEach((time, index) => {
+            setTimeout(() => { if (!isMuted) playDrumTap(index === 3 ? 0.12 : 0.2); }, time);
+        });
+        chordIdx = (chordIdx + 1) % chords.length;
+        setTimeout(playLoop, 4000); 
+    }
+
+    function updateXP(amount) {
+        managerXP += amount;
+        const threshold = managerLvl * 100;
+        if (managerXP >= threshold) {
+            managerXP -= threshold;
+            managerLvl++;
+            playInteractionSFX('lvlup');
+            showSparkles(window.innerWidth/2, 30, 20); 
+        }
+        localStorage.setItem('m_xp', managerXP);
+        localStorage.setItem('m_lvl', managerLvl);
+        
+        const addBtn = document.getElementById('add-btn');
+        if (managerLvl >= 5) {
+            addBtn.innerText = "SUPER TRUCK +20";
+            addBtn.classList.add('btn-super');
+        } else {
+            addBtn.innerText = "Add +10";
+            addBtn.classList.remove('btn-super');
+        }
+        
+        document.getElementById('level-text').innerText = `MANAGER LVL ${managerLvl}`;
+        document.getElementById('xp-bar').style.width = (managerXP / (managerLvl * 100) * 100) + '%';
+    }
+
+    function openTrophyRoom() {
+        document.getElementById('lobby-container').style.display = 'none';
+        document.getElementById('trophy-screen').style.display = 'block';
+        document.getElementById('count-gold').innerText = trophies.gold;
+        document.getElementById('count-diamond').innerText = trophies.diamond;
+        document.getElementById('count-ruby').innerText = trophies.ruby;
+    }
+
+    function closeTrophyRoom() {
+        document.getElementById('lobby-container').style.display = 'block';
+        document.getElementById('trophy-screen').style.display = 'none';
+    }
+
+    function spawnCustomer() {
+        if (!currentAisle || currentRequest) return;
+        const emojis = ['🧔', '👵', '👩‍🦰', '👨‍🦱', '🧒', '👴'];
+        const items = config[currentAisle].items;
+        currentRequest = items[Math.floor(Math.random() * items.length)];
+        
+        document.getElementById('customer-emoji').innerText = emojis[Math.floor(Math.random() * emojis.length)];
+        document.getElementById('target-item').innerText = currentRequest;
+        document.getElementById('customer-zone').style.transform = 'translateY(0)';
+        
+        setTimeout(() => {
+            if (currentRequest) {
+                document.getElementById('customer-zone').style.transform = 'translateY(150px)';
+                currentRequest = null;
+            }
+        }, 12000);
+    }
+
+    setInterval(spawnCustomer, 20000);
+
+    function toggleMusic() {
+        isMuted = !isMuted;
+        document.getElementById('music-toggle').innerText = isMuted ? "Unmute Music" : "Mute Music";
+    }
+
+    function toggleSettings() {
+        const m = document.getElementById('settings-modal');
+        const o = document.getElementById('overlay');
+        const show = m.style.display !== 'block';
+        m.style.display = show ? 'block' : 'none';
+        o.style.display = show ? 'block' : 'none';
+        if (show && audioCtx.state === 'suspended') audioCtx.resume();
+        if (show && !musicStarted) { musicStarted = true; playLoop(); }
+    }
+
+    const config = {
+        fruit: { items: ['🍎','🍏','🍌','🍊','🍇','🍒'], rows: 5, start: 30 },
+        veg: { items: ['🥦','🌽','🥕','🍅','🍆','🥔'], rows: 5, start: 30 },
+        dairy: { items: ['🥛','🧀','🥚','🧈'], rows: 4, start: 20 },
+        bakery: { items: ['🍞','🥐','🥖','🥨','🍩','🍪'], rows: 4, start: 25 },
+        meat: { items: ['🍗','🥩','🥓','🍤','🐟'], rows: 4, start: 20 },
+        drinks: { items: ['🥤','🧃','☕','🍵','🍼'], rows: 5, start: 25 },
+        snacks: { items: ['🍿','🍫','🍬','🍭'], rows: 5, start: 30 },
+        frozen: { items: ['🍦','🍧','🍨','🧊'], rows: 4, start: 20 },
+        cleaning: { items: ['🧼','🧹','🧻','🧺'], rows: 4, start: 15 },
+        gift: { items: ['❤️','💖','💝','💘','💓','💟','✨','🧸','🎁'], rows: 5, start: 20 }
+    };
+
+    let currentAisle = null, activeItem = null, offset = { x: 0, y: 0 };
+
+    function enterAisle(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (!musicStarted) { musicStarted = true; playLoop(); }
+        currentAisle = type;
+        document.getElementById('lobby-container').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'block';
+        setupShelves(type);
+        loadOrSpawn(type);
+        updateXP(0); 
+    }
+
+    function exitAisle() {
+        saveCurrentAisle();
+        document.getElementById('lobby-container').style.display = 'block';
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('items-layer').innerHTML = '';
+        currentRequest = null;
+        document.getElementById('customer-zone').style.transform = 'translateY(150px)';
+    }
+
+    function setupShelves(type) {
+        const area = document.getElementById('shelf-area');
+        area.innerHTML = '';
+        for (let r = 0; r < config[type].rows; r++) {
+            const row = document.createElement('div');
+            row.className = 'shelf-row';
+            for (let b = 0; b < 3; b++) {
+                const bay = document.createElement('div');
+                bay.className = 'shelf-bay';
+                for (let s = 0; s < 7; s++) {
+                    const slot = document.createElement('div');
+                    slot.className = 'slot';
+                    bay.appendChild(slot);
+                }
+                row.appendChild(bay);
+            }
+            area.appendChild(row);
+        }
+    }
+
+    function createItem(emoji, x, y, rarity = 'normal') {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = emoji;
+        div.style.left = x + 'px';
+        div.style.top = y + 'px';
+        div.dataset.rarity = rarity;
+        
+        if (rarity === 'gold') div.classList.add('item-gold');
+        if (rarity === 'diamond') div.classList.add('item-diamond');
+        if (rarity === 'ruby') div.classList.add('item-ruby');
+
+        div.addEventListener('mousedown', startDrag);
+        div.addEventListener('touchstart', startDrag, {passive: false});
+        document.getElementById('items-layer').appendChild(div);
+        return div;
+    }
+
+    function triggerTruck() {
+        const count = (managerLvl >= 5) ? 20 : 10;
+        manualAdd(count);
+    }
+
+    function manualAdd(count) {
+        if (truckIsMoving) return;
+        truckIsMoving = true;
+        const data = config[currentAisle];
+        const truck = document.getElementById('truck');
+        const road = document.getElementById('road');
+        
+        truck.style.transition = 'none';
+        truck.style.left = '-120px';
+        const hue = Math.floor(Math.random() * 360);
+        truck.style.filter = `hue-rotate(${hue}deg)`;
+
+        setTimeout(() => {
+            truck.style.transition = 'left 3.5s linear';
+            playInteractionSFX('truck');
+            truck.style.left = '120%';
+        }, 50);
+
+        const floorOffset = document.getElementById('floor').offsetTop;
+        const dropY = floorOffset + road.offsetTop + 10; 
+
+        for (let i = 0; i < count; i++) {
+            setTimeout(() => {
+                const emoji = data.items[Math.floor(Math.random() * data.items.length)];
+                let rarity = 'normal';
+                const roll = Math.random();
+                if (roll < 0.02) rarity = 'ruby';
+                else if (roll < 0.07) rarity = 'diamond';
+                else if (roll < 0.17) rarity = 'gold';
+
+                const dropX = (i * (window.innerWidth / (count + 1))) + 30;
+                createItem(emoji, dropX, dropY, rarity);
+                updateStacks();
+            }, i * (3000 / count)); 
+        }
+
+        setTimeout(() => {
+            playInteractionSFX('honk');
+            truckIsMoving = false;
+        }, 3600);
+    }
+
+    function showSparkles(x, y, count = 3) {
+        for (let i = 0; i < count; i++) {
+            const s = document.createElement('div');
+            s.className = 'sparkle';
+            s.innerText = '✨';
+            s.style.left = x + 'px';
+            s.style.top = y + 'px';
+            s.style.setProperty('--tx', (Math.random() * 100 - 50) + 'px');
+            s.style.setProperty('--ty', (Math.random() * -100 - 20) + 'px');
+            document.body.appendChild(s);
+            setTimeout(() => s.remove(), 600);
+        }
+    }
+
+    function startDrag(e) {
+        activeItem = e.target;
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const pt = e.type.includes('touch') ? e.touches[0] : e;
+        offset.x = pt.clientX - activeItem.offsetLeft;
+        offset.y = pt.clientY - activeItem.offsetTop;
+        activeItem.style.zIndex = 1000;
+        const b = activeItem.querySelector('.stack-badge'); if(b) b.remove();
+    }
+
+    function drag(e) {
+        if (!activeItem) return;
+        const pt = e.type.includes('touch') ? e.touches[0] : e;
+        activeItem.style.left = (pt.clientX - offset.x) + 'px';
+        activeItem.style.top = (pt.clientY - offset.y) + 'px';
+    }
+
+    function endDrag() {
+        if (!activeItem) return;
+        
+        const cZone = document.getElementById('customer-zone').getBoundingClientRect();
+        const iRect = activeItem.getBoundingClientRect();
+        const emojiClean = activeItem.innerHTML.split('<')[0];
+
+        if (currentRequest && emojiClean === currentRequest && 
+            iRect.right > cZone.left && iRect.left < cZone.right && 
+            iRect.bottom > cZone.top) {
+            
+            playInteractionSFX('success');
+            showSparkles(cZone.left + 50, cZone.top + 20, 15);
+            updateXP(100);
+            activeItem.remove();
+            currentRequest = null;
+            document.getElementById('customer-zone').style.transform = 'translateY(150px)';
+            activeItem = null;
+            updateStacks();
+            return;
+        }
+
+        const slots = document.querySelectorAll('.slot');
+        slots.forEach(slot => {
+            const sR = slot.getBoundingClientRect();
+            const iR = activeItem.getBoundingClientRect();
+            if (Math.hypot(sR.left - iR.left, sR.top - iR.top) < 25) {
+                activeItem.style.left = Math.round(sR.left + 1) + 'px';
+                activeItem.style.top = Math.round(sR.top + 1) + 'px';
+                playInteractionSFX('snap');
+                showSparkles(sR.left + 20, sR.top + 20);
+                
+                let rarity = activeItem.dataset.rarity;
+                let gain = 10;
+                if (rarity === 'gold') { gain = 20; trophies.gold++; }
+                if (rarity === 'diamond') { gain = 30; trophies.diamond++; }
+                if (rarity === 'ruby') { gain = 50; trophies.ruby++; }
+                
+                if (rarity !== 'normal') {
+                    localStorage.setItem('m_trophies', JSON.stringify(trophies));
+                }
+                
+                updateXP(gain);
+            }
+        });
+        activeItem.style.zIndex = 10;
+        activeItem = null;
+        updateStacks();
+        saveCurrentAisle();
+    }
+
+    function updateStacks() {
+        document.querySelectorAll('.stack-badge').forEach(b => b.remove());
+        const posMap = {};
+        document.querySelectorAll('.item').forEach(item => {
+            const x = parseInt(item.style.left);
+            const y = parseInt(item.style.top);
+            const key = `x${x}y${y}`;
+            if (!posMap[key]) posMap[key] = [];
+            posMap[key].push(item);
+        });
+        for (let key in posMap) {
+            if (posMap[key].length > 1) {
+                const topItem = posMap[key][posMap[key].length - 1];
+                const badge = document.createElement('div');
+                badge.className = 'stack-badge';
+                badge.innerText = posMap[key].length;
+                topItem.appendChild(badge);
+            }
+        }
+    }
+
+    function saveCurrentAisle() {
+        const items = [];
+        document.querySelectorAll('.item').forEach(el => {
+            items.push({ 
+                e: el.innerHTML.split('<')[0], 
+                x: parseInt(el.style.left), 
+                y: parseInt(el.style.top),
+                r: el.dataset.rarity
+            });
+        });
+        localStorage.setItem('market_v19_save_' + currentAisle, JSON.stringify(items));
+    }
+
+    function loadOrSpawn(type) {
+        const saved = localStorage.getItem('market_v19_save_' + type);
+        document.getElementById('items-layer').innerHTML = '';
+        if (saved) {
+            JSON.parse(saved).forEach(d => createItem(d.e, d.x, d.y, d.r || 'normal'));
+        } else {
+            const data = config[type];
+            const floorOffset = document.getElementById('floor').offsetTop;
+            const roadTop = document.getElementById('road').offsetTop;
+            for (let i = 0; i < data.start; i++) {
+                const emoji = data.items[Math.floor(Math.random() * data.items.length)];
+                createItem(emoji, Math.random() * (window.innerWidth - 50), floorOffset + roadTop + 10 + (Math.random() * 10));
+            }
+        }
+        setTimeout(updateStacks, 50);
+    }
+
+    window.addEventListener('mousemove', drag);
+    window.addEventListener('touchmove', drag, {passive: false});
+    window.addEventListener('mouseup', endDrag);
+    window.addEventListener('touchend', endDrag);
+</script>
+</body>
+</html>
