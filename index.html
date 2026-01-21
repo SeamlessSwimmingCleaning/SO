@@ -12,7 +12,20 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; background-color: #2c3e50; font-family: sans-serif; overflow: hidden; touch-action: none; -webkit-user-select: none; }
+        /* ADDED LOCK TO PREVENT ALL SCROLLING */
+        html, body { 
+            margin: 0; 
+            padding: 0;
+            width: 100vw; 
+            height: 100vh; 
+            background-color: #2c3e50; 
+            font-family: sans-serif; 
+            overflow: hidden !important; 
+            touch-action: none; 
+            -webkit-user-select: none; 
+            position: fixed;
+        }
+
         #lobby-container { text-align:center; color:white; }
         #lobby { 
             display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: auto;
@@ -25,19 +38,36 @@
         .section-icon { font-size: 40px; }
         .section-label { font-size: 10px; font-weight: bold; color: #2c3e50; text-transform: uppercase; }
 
-        /* ADVANCED IPHONE 6 SCALE FIX */
-        @media screen and (max-height: 670px) {
-            #ui-bar { height: 50px !important; }
-            .shelf-area {
-                transform: scale(0.82);
-                transform-origin: top center;
-                height: 62vh !important;
+        /* ADVANCED IPHONE 6 SCALE FIX FOR WIDTH AND HEIGHT */
+        @media screen and (max-width: 380px) {
+            .shelf-row {
+                gap: 5px !important;
                 padding: 5px !important;
-                gap: 10px !important;
+                justify-content: center !important;
             }
-            .shelf-row { padding: 5px !important; gap: 10px !important; }
-            #floor { height: 32vh !important; }
-            #road { bottom: 5px !important; }
+            .slot {
+                width: 38px !important;
+                height: 38px !important;
+            }
+            .item {
+                width: 36px !important;
+                height: 36px !important;
+                font-size: 22px !important;
+            }
+        }
+
+        @media screen and (max-height: 670px) {
+            #ui-bar { height: 45px !important; }
+            .shelf-area {
+                transform: scale(0.8);
+                transform-origin: top center;
+                height: 60vh !important;
+                padding: 0px !important;
+                gap: 8px !important;
+                overflow: hidden !important; /* NO SCROLL */
+            }
+            .shelf-row { min-height: 50px !important; }
+            #floor { height: 35vh !important; }
         }
 
         #trophy-btn { 
@@ -56,7 +86,7 @@
         .trophy-item { display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .trophy-count { font-family: 'Press Start 2P', cursive; font-size: 12px; color: #f1c40f; }
 
-        #game-screen { display: none; height: 100vh; background: #ecf0f1; position: relative; }
+        #game-screen { display: none; height: 100vh; background: #ecf0f1; position: relative; overflow: hidden; }
         
         #ui-bar {
             height: 60px; background: #333; color: white;
@@ -70,11 +100,12 @@
 
         .shelf-area {
             display: flex; flex-direction: column; gap: 20px; padding: 15px;
-            height: 55vh; overflow-y: auto; overflow-x: auto;
+            height: 55vh; overflow: hidden;
         }
         .shelf-row {
             display: flex; flex-direction: row; background: #8b5a2b; padding: 10px;
-            border-bottom: 8px solid #5d3a1a; gap: 25px; min-height: 65px; align-self: flex-start; border-radius: 4px;
+            border-bottom: 8px solid #5d3a1a; gap: 25px; min-height: 65px; align-self: center; border-radius: 4px;
+            width: 95%; /* KEEP IT WIDE BUT WITHIN BOUNDS */
         }
         .shelf-bay { display: flex; gap: 4px; background: rgba(0,0,0,0.1); padding: 5px; border-radius: 3px; }
         .slot { width: 45px; height: 45px; background: rgba(0,0,0,0.2); border-radius: 4px; flex-shrink: 0; position: relative; }
@@ -406,7 +437,6 @@
         snacks: { items: ['🍿','🍫','🍬','🍭'], rows: 5, start: 30 },
         frozen: { items: ['🍦','🍧','🍨','🧊'], rows: 4, start: 20 },
         cleaning: { items: ['🧼','🧹','🧻','🧺'], rows: 4, start: 15 },
-        // LEGACY IOS 12 EMOJIS FOR GIFT SHOP
         gift: { items: ['❤️','💖','💗','💓','💕','💞','✨','🧸','🎁'], rows: 5, start: 20 }
     };
 
@@ -630,11 +660,11 @@
                 r: el.dataset.rarity
             });
         });
-        localStorage.setItem('market_v21_save_' + currentAisle, JSON.stringify(items));
+        localStorage.setItem('market_v22_save_' + currentAisle, JSON.stringify(items));
     }
 
     function loadOrSpawn(type) {
-        const saved = localStorage.getItem('market_v21_save_' + type);
+        const saved = localStorage.getItem('market_v22_save_' + type);
         document.getElementById('items-layer').innerHTML = '';
         if (saved) {
             JSON.parse(saved).forEach(d => createItem(d.e, d.x, d.y, d.r || 'normal'));
