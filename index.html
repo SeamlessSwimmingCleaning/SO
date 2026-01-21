@@ -2,30 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Supermarket Manager Pro</title>
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="MarketPro">
-
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        /* LOCK SCREEN FOR NO SCROLL */
-        html, body { 
-            margin: 0; 
-            padding: 0;
-            width: 100vw; 
-            height: 100vh; 
-            background-color: #2c3e50; 
-            font-family: sans-serif; 
-            overflow: hidden !important; 
-            touch-action: none; 
-            -webkit-user-select: none; 
-            position: fixed;
-        }
-
+        body { margin: 0; background-color: #2c3e50; font-family: sans-serif; overflow: hidden; touch-action: none; }
         #lobby-container { text-align:center; color:white; }
         #lobby { 
             display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: auto;
@@ -37,33 +18,6 @@
         }
         .section-icon { font-size: 40px; }
         .section-label { font-size: 10px; font-weight: bold; color: #2c3e50; text-transform: uppercase; }
-
-        /* WIDE FIT - NO SCROLL LOGIC */
-        @media screen and (max-width: 400px) {
-            .shelf-row {
-                gap: 5px !important;
-                padding: 5px !important;
-                justify-content: center !important; /* Centers the bays to prevent side-scrolling */
-                width: 98% !important;
-                margin: 0 auto;
-            }
-            .shelf-bay { gap: 2px !important; padding: 2px !important; }
-            .slot { width: 38px !important; height: 38px !important; }
-            .item { width: 36px !important; height: 36px !important; font-size: 22px !important; }
-        }
-
-        @media screen and (max-height: 670px) {
-            #ui-bar { height: 45px !important; }
-            .shelf-area {
-                transform: scale(0.85);
-                transform-origin: top center;
-                height: 58vh !important;
-                padding: 5px !important;
-                gap: 8px !important;
-                overflow: hidden !important;
-            }
-            #floor { height: 32vh !important; }
-        }
 
         #trophy-btn { 
             background: #f1c40f; color: #2c3e50; border: none; padding: 15px; 
@@ -81,7 +35,7 @@
         .trophy-item { display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .trophy-count { font-family: 'Press Start 2P', cursive; font-size: 12px; color: #f1c40f; }
 
-        #game-screen { display: none; height: 100vh; background: #ecf0f1; position: relative; overflow: hidden; }
+        #game-screen { display: none; height: 100vh; background: #ecf0f1; position: relative; }
         
         #ui-bar {
             height: 60px; background: #333; color: white;
@@ -94,13 +48,12 @@
         #level-text { font-size: 12px; font-weight: bold; color: #f1c40f; }
 
         .shelf-area {
-            display: flex; flex-direction: column; gap: 15px; padding: 10px;
-            height: 55vh; overflow: hidden;
+            display: flex; flex-direction: column; gap: 20px; padding: 15px;
+            height: 55vh; overflow-y: auto; overflow-x: auto;
         }
         .shelf-row {
             display: flex; flex-direction: row; background: #8b5a2b; padding: 10px;
-            border-bottom: 8px solid #5d3a1a; gap: 20px; min-height: 60px; border-radius: 4px;
-            align-self: center;
+            border-bottom: 8px solid #5d3a1a; gap: 25px; min-height: 65px; align-self: flex-start; border-radius: 4px;
         }
         .shelf-bay { display: flex; gap: 4px; background: rgba(0,0,0,0.1); padding: 5px; border-radius: 3px; }
         .slot { width: 45px; height: 45px; background: rgba(0,0,0,0.2); border-radius: 4px; flex-shrink: 0; position: relative; }
@@ -109,10 +62,8 @@
             position: absolute; width: 44px; height: 44px; background: white;
             border-radius: 5px; display: flex; align-items: center; justify-content: center;
             font-size: 26px; cursor: grab; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10;
-            touch-action: none;
         }
         
-        /* RARITY STYLES */
         .item-gold { border: 3px solid #f1c40f; box-shadow: 0 0 10px #f1c40f; animation: pulse-gold 1s infinite alternate; }
         .item-diamond { border: 3px solid #3498db; box-shadow: 0 0 10px #3498db; animation: pulse-diamond 1s infinite alternate; }
         .item-ruby { border: 3px solid #e74c3c; box-shadow: 0 0 10px #e74c3c; animation: pulse-ruby 1s infinite alternate; }
@@ -433,7 +384,7 @@
         snacks: { items: ['🍿','🍫','🍬','🍭'], rows: 5, start: 30 },
         frozen: { items: ['🍦','🍧','🍨','🧊'], rows: 4, start: 20 },
         cleaning: { items: ['🧼','🧹','🧻','🧺'], rows: 4, start: 15 },
-        gift: { items: ['❤️','💖','💗','💓','💕','💞','✨','🧸','🎁'], rows: 5, start: 20 }
+        gift: { items: ['❤️','💖','💝','💘','💓','💟','✨','🧸','🎁'], rows: 5, start: 20 }
     };
 
     let currentAisle = null, activeItem = null, offset = { x: 0, y: 0 };
@@ -656,11 +607,11 @@
                 r: el.dataset.rarity
             });
         });
-        localStorage.setItem('market_vsave_final_' + currentAisle, JSON.stringify(items));
+        localStorage.setItem('market_v19_save_' + currentAisle, JSON.stringify(items));
     }
 
     function loadOrSpawn(type) {
-        const saved = localStorage.getItem('market_vsave_final_' + type);
+        const saved = localStorage.getItem('market_v19_save_' + type);
         document.getElementById('items-layer').innerHTML = '';
         if (saved) {
             JSON.parse(saved).forEach(d => createItem(d.e, d.x, d.y, d.r || 'normal'));
