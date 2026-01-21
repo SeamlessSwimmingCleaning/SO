@@ -2,10 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Supermarket Manager Pro</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Supermarket Organizer</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="MarketPro">
+
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; background-color: #2c3e50; font-family: sans-serif; overflow: hidden; touch-action: none; }
@@ -20,6 +24,18 @@
         }
         .section-icon { font-size: 40px; }
         .section-label { font-size: 10px; font-weight: bold; color: #2c3e50; text-transform: uppercase; }
+
+        /* FIX FOR IPHONE 6 / SMALL SCREENS */
+        @media screen and (max-height: 670px) {
+            .shelf-area {
+                transform: scale(0.85);
+                transform-origin: top center;
+                height: 65vh !important;
+            }
+            #floor {
+                height: 30vh !important;
+            }
+        }
 
         #trophy-btn { 
             background: #f1c40f; color: #2c3e50; border: none; padding: 15px; 
@@ -609,11 +625,11 @@
                 r: el.dataset.rarity
             });
         });
-        localStorage.setItem('market_v19_save_' + currentAisle, JSON.stringify(items));
+        localStorage.setItem('market_v20_save_' + currentAisle, JSON.stringify(items));
     }
 
     function loadOrSpawn(type) {
-        const saved = localStorage.getItem('market_v19_save_' + type);
+        const saved = localStorage.getItem('market_v20_save_' + type);
         document.getElementById('items-layer').innerHTML = '';
         if (saved) {
             JSON.parse(saved).forEach(d => createItem(d.e, d.x, d.y, d.r || 'normal'));
