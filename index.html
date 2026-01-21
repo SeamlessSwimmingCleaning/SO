@@ -12,7 +12,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        /* ADDED LOCK TO PREVENT ALL SCROLLING */
+        /* LOCK SCREEN FOR NO SCROLL */
         html, body { 
             margin: 0; 
             padding: 0;
@@ -38,36 +38,31 @@
         .section-icon { font-size: 40px; }
         .section-label { font-size: 10px; font-weight: bold; color: #2c3e50; text-transform: uppercase; }
 
-        /* ADVANCED IPHONE 6 SCALE FIX FOR WIDTH AND HEIGHT */
-        @media screen and (max-width: 380px) {
+        /* WIDE FIT - NO SCROLL LOGIC */
+        @media screen and (max-width: 400px) {
             .shelf-row {
                 gap: 5px !important;
                 padding: 5px !important;
-                justify-content: center !important;
+                justify-content: center !important; /* Centers the bays to prevent side-scrolling */
+                width: 98% !important;
+                margin: 0 auto;
             }
-            .slot {
-                width: 38px !important;
-                height: 38px !important;
-            }
-            .item {
-                width: 36px !important;
-                height: 36px !important;
-                font-size: 22px !important;
-            }
+            .shelf-bay { gap: 2px !important; padding: 2px !important; }
+            .slot { width: 38px !important; height: 38px !important; }
+            .item { width: 36px !important; height: 36px !important; font-size: 22px !important; }
         }
 
         @media screen and (max-height: 670px) {
             #ui-bar { height: 45px !important; }
             .shelf-area {
-                transform: scale(0.8);
+                transform: scale(0.85);
                 transform-origin: top center;
-                height: 60vh !important;
-                padding: 0px !important;
+                height: 58vh !important;
+                padding: 5px !important;
                 gap: 8px !important;
-                overflow: hidden !important; /* NO SCROLL */
+                overflow: hidden !important;
             }
-            .shelf-row { min-height: 50px !important; }
-            #floor { height: 35vh !important; }
+            #floor { height: 32vh !important; }
         }
 
         #trophy-btn { 
@@ -99,13 +94,13 @@
         #level-text { font-size: 12px; font-weight: bold; color: #f1c40f; }
 
         .shelf-area {
-            display: flex; flex-direction: column; gap: 20px; padding: 15px;
+            display: flex; flex-direction: column; gap: 15px; padding: 10px;
             height: 55vh; overflow: hidden;
         }
         .shelf-row {
             display: flex; flex-direction: row; background: #8b5a2b; padding: 10px;
-            border-bottom: 8px solid #5d3a1a; gap: 25px; min-height: 65px; align-self: center; border-radius: 4px;
-            width: 95%; /* KEEP IT WIDE BUT WITHIN BOUNDS */
+            border-bottom: 8px solid #5d3a1a; gap: 20px; min-height: 60px; border-radius: 4px;
+            align-self: center;
         }
         .shelf-bay { display: flex; gap: 4px; background: rgba(0,0,0,0.1); padding: 5px; border-radius: 3px; }
         .slot { width: 45px; height: 45px; background: rgba(0,0,0,0.2); border-radius: 4px; flex-shrink: 0; position: relative; }
@@ -117,6 +112,7 @@
             touch-action: none;
         }
         
+        /* RARITY STYLES */
         .item-gold { border: 3px solid #f1c40f; box-shadow: 0 0 10px #f1c40f; animation: pulse-gold 1s infinite alternate; }
         .item-diamond { border: 3px solid #3498db; box-shadow: 0 0 10px #3498db; animation: pulse-diamond 1s infinite alternate; }
         .item-ruby { border: 3px solid #e74c3c; box-shadow: 0 0 10px #e74c3c; animation: pulse-ruby 1s infinite alternate; }
@@ -660,11 +656,11 @@
                 r: el.dataset.rarity
             });
         });
-        localStorage.setItem('market_v22_save_' + currentAisle, JSON.stringify(items));
+        localStorage.setItem('market_vsave_final_' + currentAisle, JSON.stringify(items));
     }
 
     function loadOrSpawn(type) {
-        const saved = localStorage.getItem('market_v22_save_' + type);
+        const saved = localStorage.getItem('market_vsave_final_' + type);
         document.getElementById('items-layer').innerHTML = '';
         if (saved) {
             JSON.parse(saved).forEach(d => createItem(d.e, d.x, d.y, d.r || 'normal'));
